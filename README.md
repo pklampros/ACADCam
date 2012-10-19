@@ -1,0 +1,1 @@
+A Processing camera library that mimics Autodesk AutoCAD's and other CAD programs behaviour
