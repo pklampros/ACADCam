@@ -25,7 +25,7 @@
  * @version     0.1.1 (1)
  */
 
-package acadcam;
+package net.orangevertex.acadcam;
 
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseEvent;
