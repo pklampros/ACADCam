@@ -1,9 +1,9 @@
 /**
- * ACADCam
- * A CAD Camera. A camera resembling the orbit navigation system in CAD-software.
- * http://orange-vertex.net/ACADCam
+ * ##library.name##
+ * ##library.sentence##
+ * ##library.url##
  *
- * Copyright (C) 2012 Petros Koutsolampros http://orange-vertex.net
+ * Copyright ##copyright## ##author##
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -20,33 +20,21 @@
  * Free Software Foundation, Inc., 59 Temple Place, Suite 330,
  * Boston, MA  02111-1307  USA
  * 
- * @author      Petros Koutsolampros http://orange-vertex.net
- * @modified    08/01/2012
- * @version     0.1.1 (1)
+ * @author      ##author##
+ * @modified    ##date##
+ * @version     ##library.prettyVersion## (##library.version##)
  */
 
 package net.orangevertex.acadcam;
 
-import java.awt.event.KeyEvent;
-import java.awt.event.MouseEvent;
+import processing.event.KeyEvent;
+import processing.event.MouseEvent;
 import java.awt.event.MouseWheelEvent;
 import java.awt.event.MouseWheelListener;
 
 
 import processing.core.*;
 
-/**
- * This is a template class and can be used to start a new processing library or
- * tool. Make sure you rename this class as well as the name of the example
- * package 'template' to your own library or tool naming convention.
- * 
- * @example Hello
- * 
- *          (the tag @example followed by the name of an example included in
- *          folder 'examples' will automatically include the example in the
- *          javadoc.)
- * 
- */
 
 public class ACADCam implements MouseWheelListener {
 
@@ -58,8 +46,10 @@ public class ACADCam implements MouseWheelListener {
 	private float panFactor = -0.5f;
 	private float zoomFactor = 50f;
 	private int keyCode = 16;
-	private int mouseButton = 2;
-	private float camDist = -300;
+	private int mouseButton = 3; 
+	//processing 2.0 changes the buttons L:37 M/W:3 R:39
+	private float camDist = -100;
+	private float prevCamDist = -100;
 	private float camRot = (float) (Math.PI * 0.25);
 	private float camPitch = (float) (Math.PI * 0.25);
 	private PVector panVector = new PVector(0, 0);
@@ -71,8 +61,9 @@ public class ACADCam implements MouseWheelListener {
 	private int ctrlPressed = 0;
 	private int switchPanOrbit = 0;
 	private int extra = 0;
+//	private boolean is3D = false;
 
-	public final static String VERSION = "0.1.1";
+	public final static String VERSION = "##library.prettyVersion##";
 
 	public ACADCam(PApplet theParent) {
 		p = theParent;
@@ -81,22 +72,40 @@ public class ACADCam implements MouseWheelListener {
 
 	private void welcome() {
 		System.out
-				.println("ACADCam 0.1.1");
+				.println("##library.name## ##library.prettyVersion##");
 	}
 
 	public void registerEvents() {
-		p.registerMouseEvent(this);
-		p.registerKeyEvent(this);
+//		p.registerMouseEvent(this);
+//		p.registerKeyEvent(this);
+		p.registerMethod("mouseEvent", this);
+        p.registerMethod("keyEvent", this);
 		p.addMouseWheelListener(this);
+		callOriginal();
 	}
-
-	public void call() {
-
+	public void callOriginal() {
+		camPos = new PVector(p.width*0.5f,p.height*0.5f,(p.height*0.5f) / p.tan(p.PI*30.0f / 180.0f));
+		camCenter = new PVector(p.width*0.5f,p.height*0.5f,0f);
+		p.camera(camPos.x, camPos.y, camPos.z, camCenter.x, camCenter.y, camCenter.z, 0f, 1f, 0f);
+	}
+	public void call2D() {
+		calcCam(false);
+		p.camera(camCenter.x, camCenter.y, camPos.z, camCenter.x, camCenter.y,
+				camCenter.z, 0, 1, 0);
+	}
+	public void call3D() {
+		calcCam(true);
+		p.camera(camPos.x, camPos.y, camPos.z, camCenter.x, camCenter.y,
+				camCenter.z, 0, 0, -1);
+	}
+	private void calcCam(boolean is3D) {
+		if(rotVector.mag() != 0 || panVector.mag() != 0 || camDist != prevCamDist) {
+		prevCamDist = camDist;
 		camRot += rotVector.x;
 		if ((camPitch + rotVector.y) < 0.99 && (camPitch + rotVector.y) > 0.01)
 			camPitch += rotVector.y;
-
-		PVector camPan = new PVector((panVector.x * (float) Math.sin(Math.PI
+		if(is3D) {
+			PVector camPan = new PVector((panVector.x * (float) Math.sin(Math.PI
 				* 0.5 + (Math.PI * camRot)))
 				+ (panVector.y * (float) Math.sin(Math.PI * 1.0
 						+ (Math.PI * camRot))),
@@ -109,24 +118,22 @@ public class ACADCam implements MouseWheelListener {
 		camCenter.y += camPan.y;
 		camPan.x = 0;
 		camPan.y = 0;
+		} else {
+			camCenter.x -= 0.05f*(camPos.z - camCenter.z)*panVector.x;
+			camCenter.y += 0.05f*(camPos.z - camCenter.z)*panVector.y;
+		}
 		panVector.x = 0;
 		panVector.y = 0;
 		rotVector.x = 0;
 		rotVector.y = 0;
-		// camPitch = 10;
-		p.stroke(0, 0, 0);
 
 		camPos.x = camCenter.x - camDist * (float) Math.sin(Math.PI * camRot)
 				* (float) Math.sin(Math.PI * camPitch);
 		camPos.y = camCenter.y - camDist * (float) Math.cos(Math.PI * camRot)
 				* (float) Math.sin(Math.PI * camPitch);
 		camPos.z = camCenter.z - camDist * (float) Math.cos(Math.PI * camPitch);
-
-		// System.out.println(camPos.x);
-		p.camera(camPos.x, camPos.y, camPos.z, camCenter.x, camCenter.y,
-				camCenter.z, 0, 0, -1);
+		}
 	}
-
 	/**
 	 * return the version of the library.
 	 * 
@@ -174,7 +181,14 @@ public class ACADCam implements MouseWheelListener {
 	public void setExtraMouseButton(int v) {
 		extra = v;
 	}
+	public void setCamPos(PVector v) {
+		camPos = v.get();
+	}
 
+	public void setTargetPos(PVector v) {
+		camCenter = v.get();
+	}
+	
 	public void setVarsFull(float v1, float v2, float v3, float v4, float v5,
 			int v6, int v7, int v8, int s, int i) {
 		rotFactor = v1;
@@ -225,6 +239,7 @@ public class ACADCam implements MouseWheelListener {
 		}
 
 		registerEvents();
+		
 	}
 
 	public float getRotFactor() {
@@ -260,29 +275,30 @@ public class ACADCam implements MouseWheelListener {
 	}
 
 	public PVector getCamPos() {
-		return camPos;
+		return camPos.get();
 	}
 
 	public PVector getTargetPos() {
-		return camCenter;
+		return camCenter.get();
 	}
 
 	public void keyEvent(final KeyEvent e) {
-		switch (e.getID()) {
-		case KeyEvent.KEY_PRESSED:
+		switch (e.getKey()) {
+		case KeyEvent.PRESS:
 			if (e.getKeyCode() == keyCode)
 				ctrlPressed = 1;
 			break;
-		case KeyEvent.KEY_RELEASED:
+		case KeyEvent.RELEASE:
 			if (e.getKeyCode() == keyCode)
 				ctrlPressed = 0;
 			break;
 		}
 	}
 
-	public void mouseEvent(java.awt.event.MouseEvent e) {
-		switch (e.getID()) {
-		case MouseEvent.MOUSE_PRESSED:
+	public void mouseEvent(processing.event.MouseEvent e) {
+		
+		switch (e.getAction()) {
+		case MouseEvent.PRESS:
 			if (e.getButton() == mouseButton) {
 				startX = e.getX();
 				startY = e.getY();
@@ -294,7 +310,7 @@ public class ACADCam implements MouseWheelListener {
 				mousePressed = 1 + ctrlPressed + extra;
 			}
 			break;
-		case MouseEvent.MOUSE_RELEASED:
+		case MouseEvent.RELEASE:
 			if (e.getButton() == mouseButton) {
 				panVector.x = 0;
 				panVector.y = 0;
@@ -303,10 +319,10 @@ public class ACADCam implements MouseWheelListener {
 				mousePressed = 0;
 			}
 			break;
-		case MouseEvent.MOUSE_CLICKED:
-			// do something for mouse clicked
-			break;
-		case MouseEvent.MOUSE_DRAGGED:
+//		case MouseEvent.CLICK:
+//			// do something for mouse clicked
+//			break;
+		case MouseEvent.DRAG:
 			if (mousePressed > 0) {
 				if (mousePressed == 1 && extra == 0) {
 					if (switchPanOrbit == 0) {
@@ -341,13 +357,16 @@ public class ACADCam implements MouseWheelListener {
 				startY = e.getY();
 			}
 			break;
-		case MouseEvent.MOUSE_MOVED:
+		case MouseEvent.MOVE:
 			// umm... forgot
+			break;
+		case MouseEvent.WHEEL:
+			System.out.println("the wheel works!");
 			break;
 		}
 	}
 
-	public void keyReleased(java.awt.event.KeyEvent e) {
+	public void keyReleased(processing.event.KeyEvent e) {
 
 	}
 
@@ -359,11 +378,26 @@ public class ACADCam implements MouseWheelListener {
 //			camDist = 1.01f;
 //
 //	}
-
+	public PVector getNewMouse() {
+		  float ph = (p.height*0.5f) / p.tan(p.PI*0.1666667f);
+		  float phI = 1 / ph;
+		 return new PVector(camCenter.x + p.mouseX -p.width*0.5f + (camPos.z - ph)*(p.mouseX-p.width*0.5f)*phI,camCenter.y + p.mouseY -p.height*0.5f+ (camPos.z - ph)*(p.mouseY-p.height*0.5f)*phI);
+		 
+	}
 	@Override
 	public void mouseWheelMoved(MouseWheelEvent e) {
-		if (camDist > 1.0)
+		if (camDist > 1.0) {
 			camDist += (0.5f*camDist)* zoomFactor * e.getWheelRotation();
+			PVector newMouse = getNewMouse();
+//			PVector toAdd = new PVector(newMouse.x - p.width*0.5f,newMouse.y - p.height*0.5f);
+			PVector toAdd = new PVector(newMouse.x,newMouse.y);
+			toAdd.sub(new PVector(camCenter.x,camCenter.y));
+			toAdd.mult(-0.05f * e.getWheelRotation());
+			camPos.add(toAdd);
+//			camPos.mult(0.5f);
+			camCenter.add(toAdd);
+//			camCenter.mult(0.5f);
+		}
 		else
 			camDist = 1.01f;
 
