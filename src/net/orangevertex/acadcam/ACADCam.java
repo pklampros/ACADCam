@@ -35,19 +35,6 @@ import java.awt.event.MouseWheelListener;
 
 import processing.core.*;
 
-/**
- * This is a template class and can be used to start a new processing library or
- * tool. Make sure you rename this class as well as the name of the example
- * package 'template' to your own library or tool naming convention.
- * 
- * @example Hello
- * 
- *          (the tag @example followed by the name of an example included in
- *          folder 'examples' will automatically include the example in the
- *          javadoc.)
- * 
- */
-
 public class ACADCam implements MouseWheelListener {
 
 	// myParent is a reference to the parent sketch
